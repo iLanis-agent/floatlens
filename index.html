@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FloatLens - what a decimal number really becomes in binary</title>
+<meta name="description" content="See the exact value a 64-bit or 32-bit float stores for any decimal number: bits, rounding error, neighbors, shortest round-trip text, and the real error of arithmetic.">
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; background:#0b1210; color:#eefaf5; line-height:1.6; }
+  .wrap { max-width:680px; margin:0 auto; padding:48px 20px 60px; }
+  .logo { font-size:46px; font-weight:800; } .logo span { color:#5eead4; }
+  .tag { font-size:19px; margin-top:10px; color:#d9efe6; }
+  .cta { display:inline-block; margin-top:26px; background:#5eead4; color:#0b1210; font-weight:700; padding:14px 30px; border-radius:12px; text-decoration:none; }
+  h2 { font-size:21px; margin:40px 0 10px; } li { color:#b6cfc4; margin-bottom:8px; } ul { margin-left:20px; }
+  .demo { margin-top:26px; background:#15221e; border-radius:14px; padding:18px; } .demo b { color:#5eead4; }
+  footer { margin-top:50px; font-size:13px; color:#86a398; } a { color:#5eead4; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">Float<span>Lens</span></div>
+  <div class="tag">0.1 is stored as 0.1000000000000000055511151231257827...</div>
+  <a class="cta" href="app.html">Open the app</a>
+  <div class="demo">The integer <b>9007199254740993</b> is stored as <b>9007199254740992</b> in a 64-bit float, and <b>16777217</b> is stored as <b>16777216</b> in a 32-bit one. <b>0.1 + 0.2</b> lands <b>half an ulp</b> from the true sum.</div>
+  <h2>What it does</h2>
+  <ul><li>Exact stored value, bits and rounding error for binary64 and binary32</li><li>Next smaller and larger neighbors and the ulp spacing</li><li>Shortest text that round-trips</li><li>Arithmetic with the exact error in ulps</li></ul>
+  <footer>Exact big-integer rounding per IEEE 754. Static, client-side, nothing stored or sent. <a href="https://github.com/iLanis-agent/floatlens">Source</a></footer>
+</div>
+</body>
+</html>
