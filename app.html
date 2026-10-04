@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FloatLens - what a decimal number really becomes in binary</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; background:#0b1210; color:#eefaf5; line-height:1.5; }
+  .wrap { max-width:700px; margin:0 auto; padding:26px 16px 50px; }
+  h1 { font-size:28px; } h1 span { color:#5eead4; }
+  .sub { color:#b8cfc6; margin:6px 0 16px; }
+  .card { background:#15221e; border-radius:14px; padding:14px; margin-bottom:12px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; }
+  label { font-size:12px; color:#b8cfc6; display:block; margin-bottom:3px; }
+  input,select { width:100%; background:#0b1210; color:#eefaf5; border:1px solid #3f5a52; border-radius:8px; padding:8px; font-size:15px; font-family:inherit; }
+  button { background:#0f766e; color:#eefaf5; border:0; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; margin-right:6px; margin-top:10px; }
+  table { width:100%; border-collapse:collapse; } td,th { text-align:left; padding:8px 4px; border-bottom:1px solid #2e443d; } th { font-size:12px; color:#b8cfc6; font-weight:600; }
+  td.v { font-size:22px; font-weight:800; color:#5eead4; } tr.me td.v { color:#eefaf5; }
+  .stats { display:flex; gap:22px; flex-wrap:wrap; margin-top:12px; } .stats b { display:block; font-size:20px; } .muted { color:#b8cfc6; font-size:13px; }
+  .err { color:#ff9c8a; } .note { font-size:12.5px; color:#86a398; margin-top:6px; }
+
+  td.v { font-size:17px; } td, th { font-size:14px; } .bar { height:10px; background:#0b1210; border-radius:6px; overflow:hidden; margin-top:6px; } .bar i { display:block; height:100%; background:#5eead4; } .bar i.over { background:#ff7b72; } .no { color:#ff9c8a; }
+  .cb { display:inline-flex; align-items:center; gap:4px; margin-right:12px; font-size:14px; color:#eefaf5; } .cb input { width:auto; } .big { font-family:monospace; font-size:26px; font-weight:800; color:#5eead4; } td.v.m { font-family:monospace; }
+  textarea { width:100%; background:#0b1210; color:#eefaf5; border:1px solid #3f5a52; border-radius:8px; padding:8px; font-size:14px; font-family:monospace; min-height:110px; } .ok { color:#86efac; font-weight:700; } .no { color:#ff9c8a; } td.m { font-family:monospace; } .chip { display:inline-block; font-family:monospace; background:#0b1210; border-radius:6px; padding:2px 6px; margin:2px 4px 2px 0; }
+  textarea { width:100%; background:#0b1210; color:#eefaf5; border:1px solid #3f5a52; border-radius:8px; padding:8px; font-size:13px; font-family:monospace; min-height:130px; } .badge { display:inline-block; font-weight:800; padding:4px 12px; border-radius:20px; background:#0b1210; } .bar { height:14px; background:#0b1210; border-radius:8px; position:relative; margin:12px 0 6px; overflow:hidden; } .bar i.f { position:absolute; left:0; top:0; bottom:0; background:#14b8a6; } .bar i.n { position:absolute; top:0; bottom:0; width:3px; background:#fff; }
+  .seg { display:inline-block; height:22px; background:#14b8a6; border-radius:4px; margin:2px 2px 2px 0; vertical-align:middle; } .seg.last { background:#0f766e; } .chip { display:inline-block; font-family:monospace; background:#0b1210; border-radius:6px; padding:2px 8px; margin:2px 4px 2px 0; font-size:16px; }
+.bits{font-family:ui-monospace,Menlo,monospace;font-size:13px;word-break:break-all;margin:4px 0}.bs{color:#f87171}.be{color:#fbbf24}.bf{color:#5eead4}.lab{font-size:12px;color:#86a398}.val{font-family:ui-monospace,Menlo,monospace;font-size:13px;word-break:break-all;background:#0b1210;border-radius:6px;padding:6px 8px;display:block;margin:3px 0 8px}.k{font-size:12px;color:#86a398;margin-top:6px}.tag2{display:inline-block;font-size:11px;border-radius:4px;padding:1px 6px;margin-left:6px;background:#0f766e;color:#fff}.tag3{background:#b45309}textarea{font-family:ui-monospace,Menlo,monospace}select{background:#0b1210;color:#eefaf5;border:1px solid #3f5a52;border-radius:8px;padding:10px;font-size:16px}</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Float<span>Lens</span></h1>
+  <div class="sub">Type a decimal number. See the exact value a 64-bit or 32-bit float stores, its bits, the rounding error, the neighbors on either side, and the shortest text that reads back the same. Then add, subtract, multiply or divide two numbers and see the real error.</div>
+  <div class="card">
+    <label>Decimal number</label>
+    <input id="x" value="0.1" spellcheck="false">
+    <div><button id="p1">0.1</button><button id="p2">2^53 + 1</button><button id="p3">16777217</button><button id="p4">Smallest double</button><button id="p5">Overflow</button><button id="p6">Many digits</button></div>
+    <div id="err" class="err" style="margin-top:6px"></div>
+  </div>
+  <div class="card"><div id="f64"></div></div>
+  <div class="card"><div id="f32"></div></div>
+  <div class="card">
+    <h2 style="margin:0 0 8px;font-size:15px">Arithmetic</h2>
+    <div class="grid"><div><label>First</label><input id="a" value="0.1"></div><div><label>Operation</label><select id="op"><option>+</option><option>-</option><option>*</option><option>/</option></select></div><div><label>Second</label><input id="b" value="0.2"></div></div>
+    <div style="margin-top:8px"><label>Format</label><select id="af"><option value="f64">binary64 (double)</option><option value="f32">binary32 (float)</option></select></div>
+    <div id="ar" style="margin-top:10px"></div>
+  </div>
+  <div class="note">The decimal text is converted exactly with big-integer arithmetic and rounded to the nearest representable value, ties to even. That is what the IEEE 754 standard asks of a correct conversion, so it can differ from code that converts through a double first (for float32 that double rounding is rare but real). Arithmetic first reads both numbers as stored floats, then rounds the exact result once, which is what IEEE addition, subtraction, multiplication and division do. Not covered: NaN and infinity as inputs, other rounding modes, fused multiply-add, and the decimal formats. Runs in your browser, nothing is sent anywhere.</div>
+</div>
+<script src="engine.js"></script>
+<script>
+(function () {
+  var L = window.FloatLens, $ = function (i) { return document.getElementById(i); };
+  function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  var PRE = { p1: '0.1', p2: '9007199254740993', p3: '16777217', p4: '4.9406564584124654e-324', p5: '1e309', p6: '123456789.123456789' };
+  Object.keys(PRE).forEach(function (k) { $(k).onclick = function () { $('x').value = PRE[k]; run(); }; });
+  function card(r) {
+    var h = '<h2 style="margin:0 0 6px;font-size:15px">' + esc(r.format) + '<span class="tag2">' + r.kind + '</span>' + (r.exactMatch ? '<span class="tag2">exact</span>' : r.v.kind === 'finite' ? '<span class="tag2 tag3">rounded</span>' : '') + '</h2>';
+    h += '<div class="bits"><span class="bs">' + r.bits.sign + '</span> <span class="be">' + r.bits.exp + '</span> <span class="bf">' + r.bits.frac + '</span></div><div class="lab">sign, exponent, fraction &nbsp; ' + r.hex + '</div>';
+    h += '<div class="k">Shortest text that reads back the same</div><span class="val">' + esc(r.shortest) + '</span>';
+    if (r.exact !== null && r.v.kind !== 'inf') {
+      h += '<div class="k">Exact stored value</div><span class="val">' + esc(r.exact) + '</span>';
+      h += '<div class="k">Stored minus what you typed</div><span class="val">' + (r.errSign === 0 ? '0 (the number is exactly representable)' : (r.errSign < 0 ? '-' : '+') + r.errSci) + '</span>';
+      h += '<div class="k">Spacing between neighbors here (one ulp)</div><span class="val">' + r.ulpSci + '</span>';
+      h += '<div class="k">Neighbors (smaller magnitude, larger magnitude)</div><span class="val">' + (r.nextDown === null ? 'none' : esc(r.nextDown)) + '<br>' + esc(r.nextUp) + '</span>';
+    } else if (r.overflow) h += '<div class="warn" style="color:#fbbf24;font-size:13px">Too large: rounds to infinity in this format.</div>';
+    return h;
+  }
+  function run() {
+    var s = $('x').value, e = $('err');
+    var a = L.analyze(s, 'f64');
+    if (a.error) { e.textContent = a.error; $('f64').innerHTML = ''; $('f32').innerHTML = ''; }
+    else { e.textContent = ''; $('f64').innerHTML = card(a); $('f32').innerHTML = card(L.analyze(s, 'f32')); }
+    var r = L.arith($('a').value, $('op').value, $('b').value, $('af').value), o = $('ar');
+    if (r.error) { o.innerHTML = '<div class="err">' + esc(r.error) + '</div>'; return; }
+    var h = '<div class="k">The two numbers as stored</div><span class="val">' + esc(r.a) + ' ' + esc($('op').value) + ' ' + esc(r.b) + '</span>';
+    h += '<div class="k">Result</div><span class="val">' + esc(r.result) + (r.kind !== 'normal' ? ' (' + r.kind + ')' : '') + '</span>';
+    if (r.exactResult !== null) h += '<div class="k">Exact stored result</div><span class="val">' + esc(r.exactResult) + '</span>';
+    h += '<div class="k">Exact real answer for the stored inputs</div><span class="val">' + esc(r.exactReal) + '</span>';
+    if (r.errSci) h += '<div class="k">Error of the result</div><span class="val">' + esc(r.errSci) + ' (' + esc(r.errUlps) + ' ulp)</span>';
+    h += '<div class="lab">bits ' + esc(r.hex) + '</div>';
+    o.innerHTML = h;
+  }
+  ['x', 'a', 'b'].forEach(function (i) { $(i).oninput = run; }); ['op', 'af'].forEach(function (i) { $(i).onchange = run; });
+  run();
+})();
+</script>
+</body>
+</html>
